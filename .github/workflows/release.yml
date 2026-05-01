@@ -1,0 +1,40 @@
+# Public release workflow for github.com/Fuabioo/water-status (binaries-only).
+#
+# This file lives in the PRIVATE source repo at gitea.fabiomora.dev. The
+# release flow is:
+#   1. Tag the private repo:   git tag v0.1.0 && git push origin v0.1.0
+#   2. Gitea Actions / a manual `make release` builds the binaries
+#   3. The binaries (and updated Homebrew formula) are pushed to the public
+#      mirror at github.com/Fuabioo/water-status, which is binaries-only.
+#   4. The public release triggers the bump in github.com/Fuabioo/homebrew-tap.
+#
+# This workflow runs on the PUBLIC repo and only attaches the artifacts that
+# the operator pushed up. It does not have source code access.
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Attach prebuilt artifacts
+        run: |
+          ls -lh dist/
+          echo "Artifacts already built and committed under dist/"
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/water-status-linux-amd64.tar.gz
+            dist/water-status-linux-amd64.tar.gz.sha256
+            dist/water-status-linux-armv7.tar.gz
+            dist/water-status-linux-armv7.tar.gz.sha256
+            dist/water-status-linux-arm64.tar.gz
+            dist/water-status-linux-arm64.tar.gz.sha256
